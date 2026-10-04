@@ -1,0 +1,24 @@
+name: Build e Push para o ACR
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar codigo do repositorio
+        uses: actions/checkout@v3
+
+      - name: Autenticar no Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build e Push da Imagem Docker
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:latest .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:latest
