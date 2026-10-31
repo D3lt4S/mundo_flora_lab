@@ -2,60 +2,113 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Catálogo de Plantas</title>
+    <title>Catálogo Seguro de Plantas 🌿</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .flor-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
-        .flor-card img { max-width: 300px; border-radius: 5px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; }
-        input[type="text"], textarea { width: 100%; padding: 8px; }
-        .erro { color: red; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 15px 30px; border-radius: 8px; margin-bottom: 20px; }
+        header a { color: #1abc9c; text-decoration: none; margin-left: 15px; font-weight: bold; }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .main-content { flex: 2; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .sidebar { flex: 1; min-width: 280px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .flash { background: #e74c3c; color: white; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
+        
+        /* Carrossel Styles */
+        .carousel-container { position: relative; max-width: 100%; margin: auto; text-align: center; }
+        .carousel-slide { display: none; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .carousel-slide.active { display: block; }
+        .carousel-slide img { max-width: 100%; height: 250px; object-fit: cover; border-radius: 5px; }
+        .carousel-btns { margin-top: 15px; }
+        .carousel-btns button { background: #2c3e50; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 16px; }
+        .carousel-btns button:hover { background: #1abc9c; }
+
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button[type="submit"] { background: #27ae60; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button[type="submit"]:hover { background: #219653; }
     </style>
 </head>
 <body>
-    <h1>Catálogo Colaborativo de Plantas 🌿</h1>
+
+    <header>
+        <h2>Catálogo de Plantas 🌸</h2>
+        <div>
+            {% if session.get('user_id') %}
+                <span>Olá, <strong>{{ session['username'] }}</strong></span>
+                <a href="{{ url_for('logout') }}">Terminar Sessão</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Entrar</a>
+                <a href="{{ url_for('register') }}">Criar Conta</a>
+            {% endif %}
+        </div>
+    </header>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <p class="erro">{{ messages[0] }}</p>
+        <div class="flash">{{ messages[0] }}</div>
       {% endif %}
     {% endwith %}
 
-    <h3>Adicione uma nova flor</h3>
-    <!-- O enctype é obrigatório para uploads -->
-    <form method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-            <label>Nome da Flor:</label>
-            <input type="text" name="nome" required>
+    <div class="container">
+        <!-- Secção do Carrossel de Plantas -->
+        <div class="main-content">
+            <h3>Explorar Flores Cadastradas</h3>
+            {% if flores %}
+                <div class="carousel-container">
+                    {% for flor in flores %}
+                    <div class="carousel-slide {% if loop.first %}active{% endif %}">
+                        <h2>{{ flor.nome }}</h2>
+                        <img src="{{ url_for('static', filename='uploads/' + flor.imagem) }}" alt="{{ flor.nome }}">
+                        <p><strong>Descrição:</strong> {{ flor.descricao }}</p>
+                        <p><strong>Curiosidade:</strong> {{ flor.curiosidade }}</p>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="carousel-btns">
+                        <button onclick="mudarSlide(-1)">❮ Anterior</button>
+                        <button onclick="mudarSlide(1)">Seguinte ❯</button>
+                    </div>
+                </div>
+            {% else %}
+                <p>Ainda não existem flores cadastradas. Sê o primeiro a adicionar!</p>
+            {% endif %}
         </div>
-        <div class="form-group">
-            <label>Descrição:</label>
-            <textarea name="descricao" rows="3" required></textarea>
-        </div>
-        <div class="form-group">
-            <label>Uma Curiosidade Legal:</label>
-            <textarea name="curiosidade" rows="2" required></textarea>
-        </div>
-        <div class="form-group">
-            <label>Imagem da Flor (PNG ou JPEG):</label>
-            <input type="file" name="imagem" accept=".png, .jpg, .jpeg" required>
-        </div>
-        <button type="submit">Cadastrar Flor</button>
-    </form>
 
-    <hr>
-
-    <h3>Flores Cadastradas</h3>
-    {% for flor in flores %}
-    <div class="flor-card">
-        <h2>{{ flor.nome }}</h2>
-        <img src="{{ url_for('static', filename='uploads/' + flor.imagem) }}" alt="{{ flor.nome }}">
-        <p><strong>Descrição:</strong> {{ flor.descricao }}</p>
-        <p><strong>Curiosidade:</strong> {{ flor.curiosidade }}</p>
+        <!-- Painel Lateral: Adicionar Nova Planta -->
+        <div class="sidebar">
+            <h3>Adicionar Nova Planta</h3>
+            {% if session.get('user_id') %}
+                <form action="{{ url_for('adicionar_flor') }}" method="POST" enctype="multipart/form-data">
+                    <label>Nome:</label>
+                    <input type="text" name="nome" required>
+                    
+                    <label>Descrição:</label>
+                    <textarea name="descricao" rows="3" required></textarea>
+                    
+                    <label>Curiosidade:</label>
+                    <textarea name="curiosidade" rows="2" required></textarea>
+                    
+                    <label>Imagem (PNG / JPEG):</label>
+                    <input type="file" name="imagem" accept=".png, .jpg, .jpeg" required>
+                    
+                    <button type="submit">Cadastrar Planta</button>
+                </form>
+            {% else %}
+                <p style="color: #e74c3c; font-weight: bold;">Precisas de <a href="{{ url_for('login') }}">fazer login</a> para poder adicionar uma nova planta ao catálogo seguro.</p>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-        <p>Nenhuma flor cadastrada ainda. Seja o primeiro!</p>
-    {% endfor %}
+
+    <script>
+        let slideIndex = 0;
+        const slides = document.getElementsByClassName("carousel-slide");
+
+        function mudarSlide(n) {
+            if (slides.length === 0) return;
+            slides[slideIndex].classList.remove("active");
+            slideIndex += n;
+            if (slideIndex >= slides.length) { slideIndex = 0; }
+            if (slideIndex < 0) { slideIndex = slides.length - 1; }
+            slides[slideIndex].classList.add("active");
+        }
+    </script>
 </body>
 </html>
