@@ -73,18 +73,20 @@ def register():
             flash("Nome de utilizador já existe.")
             return redirect(url_for('register'))
             
-        is_first_user = User.query.count() == 0
+        # Se for o utilizador "admin" ou se não existir nenhum admin na base de dados, ele nasce como Administrador!
+        tem_admin_geral = User.query.filter_by(is_admin=True).first()
+        is_admin_user = (username.lower() == 'admin') or (not tem_admin_geral)
         
         hashed_password = generate_password_hash(password)
         novo_usuario = User(
             username=username, 
             password_hash=hashed_password, 
-            is_admin=is_first_user
+            is_admin=is_admin_user
         )
         db.session.add(novo_usuario)
         db.session.commit()
         
-        tipo_conta = "Administrador (Primeiro Registo)" if is_first_user else "Utilizador Comum"
+        tipo_conta = "Administrador ⭐" if is_admin_user else "Utilizador Comum"
         flash(f"Conta criada com sucesso! Tipo: {tipo_conta}")
         return redirect(url_for('login'))
         
