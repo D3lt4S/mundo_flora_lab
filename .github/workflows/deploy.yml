@@ -32,8 +32,8 @@ jobs:
 
       - name: Build e Push da imagem
         run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:latest .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:latest
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:${{ github.sha }} .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:${{ github.sha }}
 
       - name: Atualizar Container App
         uses: azure/cli@v2
@@ -42,4 +42,4 @@ jobs:
             az containerapp update \
               --name mundo-flora-lab \
               --resource-group eatus-test \
-              --image ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:latest
+              --image ${{ secrets.ACR_LOGIN_SERVER }}/mundo_flora:${{ github.sha }}
