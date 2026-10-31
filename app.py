@@ -4,12 +4,13 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import datetime, timedelta
+from sqlalchemy import inspect
 
 app = Flask(__name__)
 app.secret_key = "chave_super_secreta_devsecops_para_sessoes"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///plantas_seguro.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limite de 5MB por upload (Proteção DoS)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limite de 5MB por upload
 
 db = SQLAlchemy(app)
 
@@ -35,6 +36,22 @@ class Flor(db.Model):
     imagem = db.Column(db.String(255), nullable=False)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Função auxiliar para garantir compatibilidade caso a BD antiga já exista sem as novas colunas
+def migrar_banco():
+    inspector = inspect(db.engine)
+    if "user" in inspector.get_table_names():
+        colunas = [c["name"] for c in inspector.get_columns("user")]
+        with db.engine.connect() as conn:
+            if "is_admin" not in colunas:
+                conn.execute(db.text("ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0"))
+                conn.commit()
+            if "failed_attempts" not in colunas:
+                conn.execute(db.text("ALTER TABLE user ADD COLUMN failed_attempts INTEGER DEFAULT 0"))
+                conn.commit()
+            if "locked_until" not in colunas:
+                conn.execute(db.text("ALTER TABLE user ADD COLUMN locked_until DATETIME"))
+                conn.commit()
 
 # --- Rotas de Autenticação & Aplicação ---
 @app.route('/')
@@ -188,4 +205,5 @@ def excluir_flor(id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        migrar_banco()
     app.run(host='0.0.0.0', port=5000, debug=False)
