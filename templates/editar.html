@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Planta</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 400px; }
+        input, textarea { width: 100%; padding: 8px; margin: 8px 0 15px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #d68910; }
+        .flash { color: red; font-size: 14px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>Editar Planta: {{ flor.nome }}</h2>
+    {% with messages = get_flashed_messages() %}{% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}{% endwith %}
+    <form method="POST" enctype="multipart/form-data">
+        <label>Nome:</label>
+        <input type="text" name="nome" value="{{ flor.nome }}" required>
+        
+        <label>Descrição:</label>
+        <textarea name="descricao" rows="3" required>{{ flor.descricao }}</textarea>
+        
+        <label>Curiosidade:</label>
+        <textarea name="curiosidade" rows="2" required>{{ flor.curiosidade }}</textarea>
+        
+        <label>Nova Imagem (Opcional - PNG / JPEG):</label>
+        <input type="file" name="imagem" accept=".png, .jpg, .jpeg">
+        
+        <button type="submit">Salvar Alterações</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;"><a href="{{ url_for('index') }}">Voltar ao Início</a></p>
+</div>
+</body>
+</html>
